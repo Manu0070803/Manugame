@@ -1,0 +1,50 @@
+body {
+    font-family: Arial, sans-serif;
+    text-align: center;
+    background-color: #f4f4f4;
+}
+
+.container {
+    background: white;
+    width: 50%;
+    margin: auto;
+    padding: 20px;
+    box-shadow: 0px 0px 10px gray;
+    border-radius: 10px;
+}
+
+.number-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 10px;
+    margin: 20px 0;
+}
+
+.num-btn {
+    padding: 10px;
+    font-size: 20px;
+    background: blue;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.num-btn:hover {
+    background: darkblue;
+}
+
+button {
+    padding: 10px;
+    font-size: 18px;
+    background: green;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+button:hover {
+    background: darkgreen;
+}
+

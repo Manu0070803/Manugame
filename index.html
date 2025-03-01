@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prediction Game</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Prediction Game</h1>
+        <p>Select a number (0-9) and place your bet!</p>
+        
+        <div class="number-grid">
+            <button class="num-btn" onclick="selectNumber(0)">0</button>
+            <button class="num-btn" onclick="selectNumber(1)">1</button>
+            <button class="num-btn" onclick="selectNumber(2)">2</button>
+            <button class="num-btn" onclick="selectNumber(3)">3</button>
+            <button class="num-btn" onclick="selectNumber(4)">4</button>
+            <button class="num-btn" onclick="selectNumber(5)">5</button>
+            <button class="num-btn" onclick="selectNumber(6)">6</button>
+            <button class="num-btn" onclick="selectNumber(7)">7</button>
+            <button class="num-btn" onclick="selectNumber(8)">8</button>
+            <button class="num-btn" onclick="selectNumber(9)">9</button>
+        </div>
+
+        <p>Selected Number: <span id="selected-number">None</span></p>
+        <button onclick="predict()">Submit Prediction</button>
+
+        <h2>Result: <span id="result">Waiting...</span></h2>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
