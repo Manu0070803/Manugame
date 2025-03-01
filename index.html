@@ -4,32 +4,154 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Prediction Game</title>
-    <link rel="stylesheet" href="style.css">
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; padding: 20px; }
+        .bet-buttons button { margin: 5px; padding: 10px 20px; font-size: 16px; cursor: pointer; }
+        .red { background-color: red; color: white; }
+        .green { background-color: green; color: white; }
+        .violet { background-color: purple; color: white; }
+        #history { margin-top: 20px; text-align: left; max-width: 400px; margin: auto; }
+        #countdown { font-size: 20px; font-weight: bold; color: blue; }
+    </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Prediction Game</h1>
-        <p>Select a number (0-9) and place your bet!</p>
-        
-        <div class="number-grid">
-            <button class="num-btn" onclick="selectNumber(0)">0</button>
-            <button class="num-btn" onclick="selectNumber(1)">1</button>
-            <button class="num-btn" onclick="selectNumber(2)">2</button>
-            <button class="num-btn" onclick="selectNumber(3)">3</button>
-            <button class="num-btn" onclick="selectNumber(4)">4</button>
-            <button class="num-btn" onclick="selectNumber(5)">5</button>
-            <button class="num-btn" onclick="selectNumber(6)">6</button>
-            <button class="num-btn" onclick="selectNumber(7)">7</button>
-            <button class="num-btn" onclick="selectNumber(8)">8</button>
-            <button class="num-btn" onclick="selectNumber(9)">9</button>
-        </div>
-
-        <p>Selected Number: <span id="selected-number">None</span></p>
-        <button onclick="predict()">Submit Prediction</button>
-
-        <h2>Result: <span id="result">Waiting...</span></h2>
+    <h1>Prediction Game</h1>
+    
+    <h2>Select a number (0-9) and place your bet!</h2>
+    <div id="number-buttons"></div>
+    
+    <h3>Select Color:</h3>
+    <div class="bet-buttons">
+        <button class="red" onclick="selectColor('red')">Red</button>
+        <button class="green" onclick="selectColor('green')">Green</button>
+        <button class="violet" onclick="selectColor('violet')">Violet</button>
     </div>
 
-    <script src="script.js"></script>
+    <p>Selected Number: <span id="selectedNumber">None</span></p>
+    <p>Selected Color: <span id="selectedColor">None</span></p>
+    
+    <button onclick="submitBet()">Submit Prediction</button>
+    
+    <h2 id="countdown">Next Result in: 30s</h2>
+    
+    <h2>Result: <span id="resultText">Waiting...</span></h2>
+    
+    <h3>Result History</h3>
+    <div id="history"></div>
+
+    <script>
+        // Firebase Config
+        const firebaseConfig = {
+            apiKey: "AIzaSyAz00YoLURf7VY4bReA_UHfJ7tVnkfIwOI",
+            authDomain: "manu-6806b.firebaseapp.com",
+            databaseURL: "https://manu-6806b-default-rtdb.firebaseio.com",
+            projectId: "manu-6806b",
+            storageBucket: "manu-6806b.firebasestorage.app",
+            messagingSenderId: "540875005557",
+            appId: "1:540875005557:web:702218613907588071623c",
+            measurementId: "G-32BLRNTMVC"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+
+        // UI Elements
+        let selectedNumber = null;
+        let selectedColor = null;
+        const numberButtons = document.getElementById("number-buttons");
+        for (let i = 0; i <= 9; i++) {
+            let btn = document.createElement("button");
+            btn.innerText = i;
+            btn.onclick = () => selectNumber(i);
+            numberButtons.appendChild(btn);
+        }
+
+        function selectNumber(num) {
+            selectedNumber = num;
+            document.getElementById("selectedNumber").innerText = num;
+        }
+
+        function selectColor(color) {
+            selectedColor = color;
+            document.getElementById("selectedColor").innerText = color;
+        }
+
+        function submitBet() {
+            if (selectedNumber === null || !selectedColor) {
+                alert("Please select a number and color!");
+                return;
+            }
+            const userId = "user_" + Math.random().toString(36).substr(2, 9);
+            db.ref("bets/" + userId).set({
+                number: selectedNumber,
+                color: selectedColor,
+                amount: Math.floor(Math.random() * 500) + 100
+            });
+            alert("Bet Placed!");
+        }
+
+        function calculateResult() {
+            db.ref("bets").once("value", snapshot => {
+                let bets = snapshot.val() || {};
+                let redCount = 0, greenCount = 0, violetCount = 0;
+                let numCount = {};
+
+                for (let user in bets) {
+                    let bet = bets[user];
+                    numCount[bet.number] = (numCount[bet.number] || 0) + 1;
+                    if (bet.color === "red") redCount++;
+                    if (bet.color === "green") greenCount++;
+                    if (bet.color === "violet") violetCount++;
+                }
+
+                let minColor = (redCount < greenCount) ? "red" : "green";
+                if (redCount === greenCount) minColor = "violet";
+                if (redCount === 0 && greenCount === 0) minColor = ["red", "green", "violet"][Math.floor(Math.random() * 3)];
+
+                let randomNum = Object.keys(numCount).length > 0 ? Object.keys(numCount)[Math.floor(Math.random() * Object.keys(numCount).length)] : Math.floor(Math.random() * 10);
+
+                let resultData = {
+                    winningNumber: randomNum,
+                    winningColor: minColor,
+                    timestamp: Date.now()
+                };
+
+                db.ref("results").push(resultData);
+                db.ref("bets").remove();
+
+                document.getElementById("resultText").innerText = `Number: ${randomNum}, Color: ${minColor}`;
+                updateHistory();
+            });
+        }
+
+        function updateHistory() {
+            db.ref("results").limitToLast(5).once("value", snapshot => {
+                let historyDiv = document.getElementById("history");
+                historyDiv.innerHTML = "";
+                snapshot.forEach(child => {
+                    let result = child.val();
+                    let entry = document.createElement("p");
+                    entry.innerText = `Number: ${result.winningNumber}, Color: ${result.winningColor}`;
+                    historyDiv.appendChild(entry);
+                });
+            });
+        }
+
+        function startCountdown() {
+            let timeLeft = 30;
+            setInterval(() => {
+                if (timeLeft === 0) {
+                    calculateResult();
+                    timeLeft = 30;
+                }
+                document.getElementById("countdown").innerText = `Next Result in: ${timeLeft}s`;
+                timeLeft--;
+            }, 1000);
+        }
+
+        startCountdown();
+        updateHistory();
+    </script>
 </body>
 </html>
